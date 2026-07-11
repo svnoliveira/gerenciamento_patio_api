@@ -1,0 +1,20 @@
+URL             Parameter	Effect
+status	        Exact match
+job	            Exact match
+area	        Exact match (FK id)
+company_name	Exact match
+created_after	created_at >= value
+created_before	created_at <= value
+plate	        truck_plate__icontains
+driver	        truck_driver__icontains
+
+
+?queue_order__gt=1
+?queue_order__lte=10
+?company_name__icontains=Acme
+
+ordering
+?ordering=queue_order
+?ordering=-queue_order
+?ordering=created_at
+

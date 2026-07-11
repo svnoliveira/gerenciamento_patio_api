@@ -4,6 +4,7 @@ from rest_framework.generics import (
     ListCreateAPIView,
     RetrieveUpdateDestroyAPIView,
 )
+from _core.authentications import CookieJWTAuthentication
 from _core.permissions import IsSuperUserOrSafeMethod, IsSuperUserOrOwnsAccount
 from .serializers import (
     UserSerializer,
@@ -11,7 +12,8 @@ from .serializers import (
     PasswordResetConfirmSerializer,
 )
 from .models import User
-from rest_framework_simplejwt.authentication import JWTAuthentication
+
+# from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import AllowAny
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.response import Response
@@ -46,7 +48,7 @@ class UserCreateView(CreateAPIView):
 
 
 class UserListCreateView(ListCreateAPIView):
-    authentication_classes = [JWTAuthentication]
+    authentication_classes = [CookieJWTAuthentication]
     permission_classes = [IsSuperUserOrSafeMethod]
 
     serializer_class = UserSerializer
@@ -54,7 +56,7 @@ class UserListCreateView(ListCreateAPIView):
 
 
 class UserRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
-    authentication_classes = [JWTAuthentication]
+    authentication_classes = [CookieJWTAuthentication]
     permission_classes = [IsSuperUserOrOwnsAccount]
 
     serializer_class = UserSerializer

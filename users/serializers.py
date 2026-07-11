@@ -5,11 +5,14 @@ from django.core.exceptions import ValidationError as DjangoValidationError
 from django.contrib.auth.password_validation import validate_password
 from django.utils.http import urlsafe_base64_decode
 from rest_framework import serializers
+from _core.serializers import CompanySimpleSerializer
 from .models import User
 
 
 class UserSerializer(serializers.ModelSerializer):
     is_superuser = serializers.JSONField(required=False, default=False)
+
+    company = CompanySimpleSerializer(read_only=True)
 
     class Meta:
         model = User
@@ -20,6 +23,8 @@ class UserSerializer(serializers.ModelSerializer):
             "name",
             "password",
             "is_superuser",
+            "role",
+            "company",
         ]
         depth = 1
         extra_kwargs = {
@@ -49,9 +54,18 @@ class UserSerializer(serializers.ModelSerializer):
             return True
         return False
 
+    def validate_role(self, value):
+        request = self.context["request"]
+
+        if request.user.is_superuser:
+            return value
+
+        return User.Role.COMPANY
+
     def create(self, validated_data: dict) -> User:
         is_superuser = validated_data.pop("is_superuser", False)
         if is_superuser:
+            validated_data["role"] = User.Role.ADMIN
             user = User.objects.create_superuser(**validated_data)
         else:
             user = User.objects.create_user(**validated_data)

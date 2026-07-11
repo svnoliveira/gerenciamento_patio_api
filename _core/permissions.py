@@ -1,6 +1,8 @@
 from rest_framework import permissions
 from rest_framework.views import Request, View
 
+from users.models import User
+
 # from users.models import User
 
 
@@ -33,11 +35,13 @@ class IsSuperUserOrOwnsAccount(permissions.BasePermission):
         )
 
 
-class IsSuperUserOrOwnsComment(permissions.BasePermission):
-    def has_object_permission(self, request: Request, view: View, obj) -> bool:
+class IsOperator(permissions.BasePermission):
+    def has_permission(self, request, view):
+        return request.user.is_authenticated and request.user.role == User.Role.OPERATOR
+
+
+class IsCompanyUser(permissions.BasePermission):
+    def has_object_permission(self, request, view, obj):
         return (
-            request.user.is_authenticated
-            and request.user.is_superuser
-            or request.user.is_authenticated
-            and request.user.id == obj.user_name.id
+            request.user.is_authenticated and request.user.company_id == obj.company_id
         )
