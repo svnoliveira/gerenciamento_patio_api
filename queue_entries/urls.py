@@ -2,11 +2,15 @@ from django.urls import path
 
 from .views import (
     QueueEntryAssignAreaView,
+    QueueEntryDetailView,
+    QueueEntryEstimateView,
     QueueEntryListCreateView,
+    QueueEntryMoveToAreaView,
     QueueEntryRetrieveUpdateDestroyView,
     QueueEntryStandbyView,
     QueueEntryStartView,
     QueueEntryFinishView,
+    QueueEntryTodayStatsView,
     QueueEntryWaitView,
     QueueEntryCancelView,
     QueueEntryNormalizeView,
@@ -21,6 +25,7 @@ urlpatterns = [
         "queue-entries/<int:queue_entry_id>/",
         QueueEntryRetrieveUpdateDestroyView.as_view(),
     ),
+    path("queue-entries/detail/<int:queue_entry_id>/", QueueEntryDetailView.as_view()),
     path(
         "queue-entries/<int:queue_entry_id>/assign-area/<int:area_id>/",
         QueueEntryAssignAreaView.as_view(),
@@ -60,5 +65,14 @@ urlpatterns = [
     path(
         "queue-entries/<int:queue_entry_id>/set-order/<int:queue_order>/",
         QueueEntrySetOrderView.as_view(),
+    ),
+    path(
+        "queue-entries/<int:queue_entry_id>/move-to-area/<int:area_id>/",
+        QueueEntryMoveToAreaView.as_view(),
+    ),
+    # urls.py
+    path("queue-entries/stats/today/", QueueEntryTodayStatsView.as_view()),
+    path(
+        "queue-entries/<int:queue_entry_id>/estimate/", QueueEntryEstimateView.as_view()
     ),
 ]

@@ -2,6 +2,7 @@ from django.urls import path
 from .views import (
     CookieTokenObtainPairView,
     CookieTokenRefreshView,
+    GetCSRFToken,
     LogoutView,
     MeView,
     PasswordResetConfirmView,
@@ -12,6 +13,7 @@ from .views import (
 )
 
 urlpatterns = [
+    path("csrf/", GetCSRFToken.as_view(), name="get_csrf"),
     path("register/", UserCreateView.as_view()),
     path("me/", MeView.as_view()),
     path("users/", UserListCreateView.as_view()),

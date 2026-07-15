@@ -9,7 +9,6 @@ from django.db.models import Max, F
 
 @transaction.atomic
 def assign_area(queue_entry, area):
-
     if (
         queue_entry.status == QueueEntry.Status.FINISHED
         or queue_entry.status == QueueEntry.Status.CANCELLED
@@ -25,17 +24,19 @@ def assign_area(queue_entry, area):
 
 @transaction.atomic
 def standby_queue_entry(queue_entry):
-
     if queue_entry.area is None:
         raise ValidationError(
             {"area": "Assign an area before putting the truck on standby."}
         )
 
-    if queue_entry.status != QueueEntry.Status.WAITING:
-        raise ValidationError({"status": "Only waiting entries can enter standby."})
+    if queue_entry.status not in (QueueEntry.Status.WAITING, QueueEntry.Status.INSIDE):
+        raise ValidationError(
+            {"status": "Only waiting or inside entries can enter standby."}
+        )
 
     queue_entry.status = QueueEntry.Status.STANDBY
-    queue_entry.on_standby_time = timezone.now()
+    if queue_entry.on_standby_time is None:
+        queue_entry.on_standby_time = timezone.now()
     queue_entry.save()
 
     return queue_entry
@@ -86,7 +87,6 @@ def finish_queue_entry(queue_entry):
 
 @transaction.atomic
 def wait_queue_entry(queue_entry):
-
     if (
         queue_entry.status == QueueEntry.Status.FINISHED
         or queue_entry.status == QueueEntry.Status.CANCELLED
@@ -94,6 +94,8 @@ def wait_queue_entry(queue_entry):
         raise ValidationError({"status": "Invalid status for waiting."})
 
     queue_entry.status = QueueEntry.Status.WAITING
+    queue_entry.area = None
+    queue_entry.start_time = None
     queue_entry.save()
 
     return queue_entry
@@ -176,28 +178,34 @@ def new_order(queue_entry):
 @transaction.atomic
 def set_order(queue_entry, new_order):
 
-    if queue_entry.queue_order is None:
-        raise ValidationError({"queue_order": "Entry has no queue order."})
-
     current = queue_entry.queue_order
 
     maximum = (
         QueueEntry.objects.select_for_update()
         .filter(status__in=ACTIVE_STATUSES)
         .aggregate(max=Max("queue_order"))
-    )["max"] or 1
+    )["max"] or 0
+
+    if current is None:
+        maximum += 1
 
     if new_order < 1:
         new_order = 1
-
     if new_order > maximum:
         new_order = maximum
 
-    if new_order == current:
+    if current is not None and new_order == current:
         return queue_entry
 
-    if new_order < current:
+    if current is None:
 
+        (
+            QueueEntry.objects.filter(
+                status__in=ACTIVE_STATUSES,
+                queue_order__gte=new_order,
+            ).update(queue_order=F("queue_order") + 1)
+        )
+    elif new_order < current:
         (
             QueueEntry.objects.filter(
                 status__in=ACTIVE_STATUSES,
@@ -205,9 +213,7 @@ def set_order(queue_entry, new_order):
                 queue_order__lt=current,
             ).update(queue_order=F("queue_order") + 1)
         )
-
     else:
-
         (
             QueueEntry.objects.filter(
                 status__in=ACTIVE_STATUSES,
@@ -219,4 +225,13 @@ def set_order(queue_entry, new_order):
     queue_entry.queue_order = new_order
     queue_entry.save(update_fields=["queue_order"])
 
+    return queue_entry
+
+
+@transaction.atomic
+def move_to_area(queue_entry, area):
+    assign_area(queue_entry, area)
+    standby_queue_entry(queue_entry)
+    start_queue_entry(queue_entry)
+    clear_order(queue_entry)
     return queue_entry

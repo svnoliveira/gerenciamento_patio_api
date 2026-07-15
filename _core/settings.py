@@ -197,7 +197,14 @@ SIMPLE_JWT = {
 AUTH_USER_MODEL = "users.User"
 SUPERUSER_CREATION_SECRET = os.getenv("SUPERUSER_CREATION_SECRET")
 
-FRONTEND_URL = "http://localhost:3000"  # adjust to your frontend's dev URL
+FRONTEND_URL = "http://localhost:3000"
+COOKIE_DOMAIN = os.getenv("COOKIE_DOMAIN", default=None)
+
+CSRF_COOKIE_HTTPONLY = False
+CSRF_COOKIE_SAMESITE = "Lax"
+CSRF_COOKIE_DOMAIN = COOKIE_DOMAIN
+CSRF_COOKIE_SECURE = not DEBUG
+CSRF_TRUSTED_ORIGINS = os.getenv("CSRF_TRUSTED_ORIGINS", default="").split(",")
 
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 DEFAULT_FROM_EMAIL = "noreply@example.com"

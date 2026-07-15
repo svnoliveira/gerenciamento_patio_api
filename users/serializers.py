@@ -6,13 +6,29 @@ from django.contrib.auth.password_validation import validate_password
 from django.utils.http import urlsafe_base64_decode
 from rest_framework import serializers
 from _core.serializers import CompanySimpleSerializer
+from companies.models import Company
 from .models import User
+
+
+class CompanyField(serializers.PrimaryKeyRelatedField):
+    def to_internal_value(self, data):
+        if data in (0, "0", None, "null"):
+            return None
+        return super().to_internal_value(data)
 
 
 class UserSerializer(serializers.ModelSerializer):
     is_superuser = serializers.JSONField(required=False, default=False)
 
     company = CompanySimpleSerializer(read_only=True)
+
+    company_id = CompanyField(
+        source="company",
+        queryset=Company.objects.all(),
+        write_only=True,
+        required=False,
+        allow_null=True,
+    )
 
     class Meta:
         model = User
@@ -25,6 +41,7 @@ class UserSerializer(serializers.ModelSerializer):
             "is_superuser",
             "role",
             "company",
+            "company_id",
         ]
         depth = 1
         extra_kwargs = {

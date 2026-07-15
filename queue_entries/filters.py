@@ -1,4 +1,4 @@
-from django_filters import FilterSet, DateTimeFilter, CharFilter
+from django_filters import BaseInFilter, FilterSet, DateTimeFilter, CharFilter
 from .models import QueueEntry
 
 
@@ -24,12 +24,18 @@ class QueueEntryFilter(FilterSet):
         lookup_expr="icontains",
     )
 
+    company_name = CharFilter(
+        field_name="company_name",
+        lookup_expr="icontains",
+    )
+
+    status_in = BaseInFilter(field_name="status", lookup_expr="in")
+
     class Meta:
         model = QueueEntry
         fields = {
             "status": ["exact"],
             "job": ["exact"],
             "area": ["exact"],
-            "company_name": ["exact"],
             "queue_order": ["exact", "gt", "gte", "lt", "lte"],
         }

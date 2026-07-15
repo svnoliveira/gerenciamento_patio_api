@@ -5,6 +5,14 @@ from areas.serializers import AreaSerializer
 from .models import QueueEntry
 
 
+class QueueEntryPublicSerializer(serializers.ModelSerializer):
+    area = AreaSerializer(read_only=True)
+
+    class Meta:
+        model = QueueEntry
+        fields = ["id", "truck_plate", "queue_order", "photo", "status", "area"]
+
+
 class QueueEntrySerializer(serializers.ModelSerializer):
 
     area = serializers.PrimaryKeyRelatedField(

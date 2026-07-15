@@ -1,4 +1,5 @@
 from django.conf import settings
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.generics import (
     CreateAPIView,
     ListCreateAPIView,
@@ -6,6 +7,7 @@ from rest_framework.generics import (
 )
 from _core.authentications import CookieJWTAuthentication
 from _core.permissions import IsSuperUserOrSafeMethod, IsSuperUserOrOwnsAccount
+from users.filters import UserFilter
 from .serializers import (
     UserSerializer,
     PasswordResetRequestSerializer,
@@ -13,8 +15,11 @@ from .serializers import (
 )
 from .models import User
 
+from django.views.decorators.csrf import ensure_csrf_cookie
+from django.utils.decorators import method_decorator
+
 # from rest_framework_simplejwt.authentication import JWTAuthentication
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.response import Response
 from rest_framework import status
@@ -35,9 +40,19 @@ def set_access_cookie(response, access_token):
         httponly=True,
         secure=not settings.DEBUG,
         samesite="Lax",
+        domain=settings.COOKIE_DOMAIN,
+        path="/",
         max_age=60 * 60 * 10,
     )
     return response
+
+
+@method_decorator(ensure_csrf_cookie, name="dispatch")
+class GetCSRFToken(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        return Response({"detail": "CSRF cookie set"})
 
 
 class UserCreateView(CreateAPIView):
@@ -50,6 +65,8 @@ class UserCreateView(CreateAPIView):
 class UserListCreateView(ListCreateAPIView):
     authentication_classes = [CookieJWTAuthentication]
     permission_classes = [IsSuperUserOrSafeMethod]
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = UserFilter
 
     serializer_class = UserSerializer
     queryset = User.objects.all()
@@ -65,6 +82,8 @@ class UserRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
 
 
 class MeView(APIView):
+    authentication_classes = [CookieJWTAuthentication]
+    permission_classes = [IsAuthenticated]
 
     def get(self, request):
         serializer = UserSerializer(request.user)
@@ -92,6 +111,7 @@ class CookieTokenObtainPairView(TokenObtainPairView):
                 httponly=True,
                 secure=not settings.DEBUG,
                 samesite="Lax",
+                path="/",
                 max_age=60 * 60 * 24 * 7,
             )
 
@@ -120,7 +140,10 @@ class CookieTokenRefreshView(TokenRefreshView):
 
         access_token = serializer.validated_data["access"]
 
-        response = Response({"message": "Token refreshed"}, status=status.HTTP_200_OK)
+        response = Response(
+            {"message": "Token refreshed", "detail": "ok", "access": access_token},
+            status=status.HTTP_200_OK,
+        )
         set_access_cookie(response, access_token)
 
         return response
@@ -132,8 +155,8 @@ class LogoutView(APIView):
 
     def post(self, request):
         response = Response({"message": "Logout successful"})
-        response.delete_cookie("access_token")
-        response.delete_cookie("refresh_token")
+        response.delete_cookie("access_token", domain=settings.COOKIE_DOMAIN, path="/")
+        response.delete_cookie("refresh_token", domain=settings.COOKIE_DOMAIN, path="/")
         return response
 
 

@@ -1,4 +1,6 @@
+from django_filters.rest_framework import DjangoFilterBackend
 from _core.permissions import IsCompanyUser, IsOperator
+from trucks.filters import TruckFilter
 from trucks.models import Truck
 from users.models import User
 
@@ -9,6 +11,8 @@ from rest_framework.permissions import IsAdminUser
 
 class TruckListCreateView(ListCreateAPIView):
     serializer_class = TruckSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = TruckFilter
 
     def get_queryset(self):
         user = self.request.user
