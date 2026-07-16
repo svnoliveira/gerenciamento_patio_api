@@ -6,7 +6,11 @@ from rest_framework.generics import (
     RetrieveUpdateDestroyAPIView,
 )
 from _core.authentications import CookieJWTAuthentication
-from _core.permissions import IsSuperUserOrSafeMethod, IsSuperUserOrOwnsAccount
+from _core.permissions import (
+    IsOperator,
+    IsSuperUserOrSafeMethod,
+    IsSuperUserOrOwnsAccount,
+)
 from users.filters import UserFilter
 from .serializers import (
     UserSerializer,
@@ -74,7 +78,7 @@ class UserListCreateView(ListCreateAPIView):
 
 class UserRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
     authentication_classes = [CookieJWTAuthentication]
-    permission_classes = [IsSuperUserOrOwnsAccount]
+    permission_classes = [IsSuperUserOrOwnsAccount | IsOperator]
 
     serializer_class = UserSerializer
     queryset = User.objects.all()
@@ -119,6 +123,8 @@ class CookieTokenObtainPairView(TokenObtainPairView):
 
 
 class CookieTokenRefreshView(TokenRefreshView):
+    permission_classes = [AllowAny]
+
     def post(self, request, *args, **kwargs):
         refresh_token = request.COOKIES.get("refresh_token")
 
@@ -151,7 +157,6 @@ class CookieTokenRefreshView(TokenRefreshView):
 
 class LogoutView(APIView):
     permission_classes = [AllowAny]
-    authentication_classes = []
 
     def post(self, request):
         response = Response({"message": "Logout successful"})

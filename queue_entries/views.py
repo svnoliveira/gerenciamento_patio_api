@@ -1,5 +1,5 @@
 from _core.authentications import CookieJWTAuthentication
-from _core.permissions import IsOperator
+from _core.permissions import IsOperator, IsSuperUser, IsSuperUserOrSafeMethod
 from areas.models import Area
 from queue_entries.filters import QueueEntryFilter
 from queue_entries.models import QueueEntry
@@ -78,6 +78,9 @@ class QueueEntryListCreateView(ListCreateAPIView):
 
 
 class QueueEntryMoveToAreaView(APIView):
+    authentication_classes = [CookieJWTAuthentication]
+    permission_classes = [IsSuperUser | IsOperator]
+
     def post(self, request, queue_entry_id, area_id):
         queue_entry = get_object_or_404(QueueEntry, id=queue_entry_id)
         area = get_object_or_404(Area, id=area_id)
@@ -88,6 +91,9 @@ class QueueEntryMoveToAreaView(APIView):
 
 
 class QueueEntryDetailView(RetrieveAPIView):
+    permission_classes = [AllowAny]
+    authentication_classes = [CookieJWTAuthentication]
+
     queryset = QueueEntry.objects.all()
     permission_classes = [AllowAny]
     lookup_url_kwarg = "queue_entry_id"
@@ -116,6 +122,8 @@ class QueueEntryDetailView(RetrieveAPIView):
 
 
 class QueueEntryRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
+    authentication_classes = [CookieJWTAuthentication]
+    permission_classes = [IsSuperUserOrSafeMethod | IsOperator]
     queryset = QueueEntry.objects.all()
     serializer_class = QueueEntrySerializer
     lookup_url_kwarg = "queue_entry_id"
@@ -123,6 +131,8 @@ class QueueEntryRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
 
 
 class QueueEntryAssignAreaView(GenericAPIView):
+    authentication_classes = [CookieJWTAuthentication]
+    permission_classes = [IsSuperUser | IsOperator]
     queryset = QueueEntry.objects.all()
     serializer_class = QueueEntrySerializer
     lookup_url_kwarg = "queue_entry_id"
@@ -143,6 +153,8 @@ class QueueEntryAssignAreaView(GenericAPIView):
 
 
 class QueueEntryStandbyView(GenericAPIView):
+    authentication_classes = [CookieJWTAuthentication]
+    permission_classes = [IsSuperUser | IsOperator]
     queryset = QueueEntry.objects.all()
     serializer_class = QueueEntrySerializer
     lookup_url_kwarg = "queue_entry_id"
@@ -157,6 +169,8 @@ class QueueEntryStandbyView(GenericAPIView):
 
 
 class QueueEntryStartView(GenericAPIView):
+    authentication_classes = [CookieJWTAuthentication]
+    permission_classes = [IsSuperUser | IsOperator]
     queryset = QueueEntry.objects.all()
     serializer_class = QueueEntrySerializer
     lookup_url_kwarg = "queue_entry_id"
@@ -172,6 +186,8 @@ class QueueEntryStartView(GenericAPIView):
 
 
 class QueueEntryFinishView(GenericAPIView):
+    authentication_classes = [CookieJWTAuthentication]
+    permission_classes = [IsSuperUser | IsOperator]
     queryset = QueueEntry.objects.all()
     serializer_class = QueueEntrySerializer
     lookup_url_kwarg = "queue_entry_id"
@@ -187,6 +203,8 @@ class QueueEntryFinishView(GenericAPIView):
 
 
 class QueueEntryWaitView(GenericAPIView):
+    authentication_classes = [CookieJWTAuthentication]
+    permission_classes = [IsSuperUser | IsOperator]
     queryset = QueueEntry.objects.all()
     serializer_class = QueueEntrySerializer
     lookup_url_kwarg = "queue_entry_id"
@@ -202,6 +220,8 @@ class QueueEntryWaitView(GenericAPIView):
 
 
 class QueueEntryCancelView(GenericAPIView):
+    authentication_classes = [CookieJWTAuthentication]
+    permission_classes = [IsSuperUser | IsOperator]
     queryset = QueueEntry.objects.all()
     serializer_class = QueueEntrySerializer
     lookup_url_kwarg = "queue_entry_id"
@@ -217,6 +237,8 @@ class QueueEntryCancelView(GenericAPIView):
 
 
 class QueueEntryNormalizeView(GenericAPIView):
+    authentication_classes = [CookieJWTAuthentication]
+    permission_classes = [IsSuperUser | IsOperator]
     queryset = QueueEntry.objects.all()
     serializer_class = QueueEntrySerializer
     permission_classes = [IsOperator | IsAdminUser]
@@ -237,6 +259,8 @@ class QueueEntryNormalizeView(GenericAPIView):
 
 
 class QueueEntryClearOrderView(GenericAPIView):
+    authentication_classes = [CookieJWTAuthentication]
+    permission_classes = [IsSuperUser | IsOperator]
     queryset = QueueEntry.objects.all()
     serializer_class = QueueEntrySerializer
     lookup_url_kwarg = "queue_entry_id"
@@ -252,6 +276,8 @@ class QueueEntryClearOrderView(GenericAPIView):
 
 
 class QueueEntryNewOrderView(GenericAPIView):
+    authentication_classes = [CookieJWTAuthentication]
+    permission_classes = [AllowAny]
     queryset = QueueEntry.objects.all()
     serializer_class = QueueEntrySerializer
     lookup_url_kwarg = "queue_entry_id"
@@ -266,6 +292,8 @@ class QueueEntryNewOrderView(GenericAPIView):
 
 
 class QueueEntrySetOrderView(GenericAPIView):
+    authentication_classes = [CookieJWTAuthentication]
+    permission_classes = [IsSuperUser | IsOperator]
     queryset = QueueEntry.objects.all()
     serializer_class = QueueEntrySerializer
     lookup_url_kwarg = "queue_entry_id"
@@ -287,6 +315,7 @@ class QueueEntrySetOrderView(GenericAPIView):
 
 class QueueEntryTodayStatsView(APIView):
     permission_classes = [AllowAny]
+    authentication_classes = [CookieJWTAuthentication]
 
     def get(self, request):
         return Response(get_today_status())
@@ -294,6 +323,7 @@ class QueueEntryTodayStatsView(APIView):
 
 class QueueEntryEstimateView(APIView):
     permission_classes = [AllowAny]
+    authentication_classes = [CookieJWTAuthentication]
 
     def get(self, request, queue_entry_id):
         entry = get_object_or_404(QueueEntry, id=queue_entry_id)

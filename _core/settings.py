@@ -53,13 +53,7 @@ THIRD_PARTY_APPS = [
     "storages",
 ]
 
-MY_APPS = [
-    "users",
-    "companies",
-    "trucks",
-    "areas",
-    "queue_entries",
-]
+MY_APPS = ["users", "companies", "trucks", "areas", "queue_entries", "integrations"]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + MY_APPS
 

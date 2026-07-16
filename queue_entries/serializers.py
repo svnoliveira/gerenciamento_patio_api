@@ -1,3 +1,5 @@
+from PIL import Image
+
 from areas.models import Area
 from rest_framework import serializers
 
@@ -51,6 +53,20 @@ class QueueEntrySerializer(serializers.ModelSerializer):
             "created_at": {"read_only": True},
             "updated_at": {"read_only": True},
         }
+
+    def validate_photo(self, photo):
+        if photo.size > 10 * 1024 * 1024:
+            raise serializers.ValidationError("The image cannot be larger than 10 MB.")
+
+        try:
+            img = Image.open(photo)
+            img.verify()
+        except Exception:
+            raise serializers.ValidationError("Invalid image file.")
+
+        photo.seek(0)
+
+        return photo
 
     def to_representation(self, instance):
         rep = super().to_representation(instance)
