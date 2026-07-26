@@ -29,10 +29,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv("DEBUG", default=True)
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["api.lrnagricola.com.br", "app.lrnagricola.com.br", "localhost"]
 
+USE_X_FORWARDED_HOST = True
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 # Application definition
 
@@ -191,7 +193,7 @@ SIMPLE_JWT = {
 AUTH_USER_MODEL = "users.User"
 SUPERUSER_CREATION_SECRET = os.getenv("SUPERUSER_CREATION_SECRET")
 
-FRONTEND_URL = "http://localhost:3000"
+FRONTEND_URL = os.getenv("FRONTEND_URL", default=None)
 COOKIE_DOMAIN = os.getenv("COOKIE_DOMAIN", default=None)
 
 CSRF_COOKIE_HTTPONLY = False
@@ -203,8 +205,6 @@ CSRF_TRUSTED_ORIGINS = os.getenv("CSRF_TRUSTED_ORIGINS", default="").split(",")
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 DEFAULT_FROM_EMAIL = "noreply@example.com"
 
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-]
+CORS_ALLOWED_ORIGINS = ["http://localhost:3000", "https://app.lrnagricola.com.br"]
 
 CORS_ALLOW_CREDENTIALS = True
