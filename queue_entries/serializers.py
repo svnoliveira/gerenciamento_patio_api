@@ -22,6 +22,11 @@ class QueueEntrySerializer(serializers.ModelSerializer):
         allow_null=True,
         required=False,
     )
+    job = serializers.ChoiceField(
+        choices=QueueEntry.Job.choices,
+        allow_null=True,
+        required=False,
+    )
 
     class Meta:
         model = QueueEntry
@@ -30,8 +35,9 @@ class QueueEntrySerializer(serializers.ModelSerializer):
             "area",
             "status",
             "job",
-            "on_standby_time",
+            "arrival_time",
             "start_time",
+            "awaiting_conclusion_time",
             "end_time",
             "created_at",
             "updated_at",
@@ -41,17 +47,16 @@ class QueueEntrySerializer(serializers.ModelSerializer):
             "company_name",
             "truck_plate",
             "truck_product",
-            "truck_granel",
-            "truck_bag",
-            "truck_pallet",
             "truck_driver",
             "truck_cpf",
             "truck_cellphone",
             "truck_type",
+            "truck_cargo_type",
         ]
         extra_kwargs = {
             "created_at": {"read_only": True},
             "updated_at": {"read_only": True},
+            "photo": {"required": False, "allow_null": True},
         }
 
     def validate_photo(self, photo):
@@ -67,6 +72,34 @@ class QueueEntrySerializer(serializers.ModelSerializer):
         photo.seek(0)
 
         return photo
+
+    def to_representation(self, instance):
+        rep = super().to_representation(instance)
+        rep["area"] = AreaSerializer(instance.area).data if instance.area else None
+        return rep
+
+
+class QueueEntryScheduleEditSerializer(serializers.ModelSerializer):
+    area = serializers.PrimaryKeyRelatedField(
+        queryset=Area.objects.all(),
+        allow_null=True,
+        required=False,
+    )
+
+    class Meta:
+        model = QueueEntry
+        fields = [
+            "id",
+            "area",
+            "company_name",
+            "truck_plate",
+            "truck_product",
+            "truck_driver",
+            "truck_cpf",
+            "truck_cellphone",
+            "truck_type",
+            "truck_cargo_type",
+        ]
 
     def to_representation(self, instance):
         rep = super().to_representation(instance)

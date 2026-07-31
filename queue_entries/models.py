@@ -1,5 +1,6 @@
 from django.db import models
 from _core import settings
+from trucks.models import Truck
 
 
 class QueueEntry(models.Model):
@@ -8,9 +9,10 @@ class QueueEntry(models.Model):
         DESCARGA = "Descarga", "Descarga"
 
     class Status(models.TextChoices):
-        WAITING = "WAITING", "Waiting"
-        STANDBY = "STANDBY", "Standby"
-        INSIDE = "INSIDE", "Inside"
+        SCHEDULED = "SCHEDULED", "Scheduled"
+        ON_YARD = "ON_YARD", "On Yard"
+        IN_OPERATION = "IN_OPERATION", "In Operation"
+        AWAITING_CONCLUSION = "AWAITING_CONCLUSION", "Awaiting Conclusion"
         FINISHED = "FINISHED", "Finished"
         CANCELLED = "CANCELLED", "Cancelled"
 
@@ -24,7 +26,7 @@ class QueueEntry(models.Model):
     status = models.CharField(
         max_length=20,
         choices=Status.choices,
-        default=Status.WAITING,
+        default=Status.SCHEDULED,
     )
     registered_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -32,10 +34,13 @@ class QueueEntry(models.Model):
         blank=True,
         on_delete=models.SET_NULL,
     )
-    job = models.CharField(max_length=127, choices=Job.choices)
-    on_standby_time = models.DateTimeField(null=True, blank=True)
+    job = models.CharField(max_length=127, choices=Job.choices, null=True, blank=True)
+
+    arrival_time = models.DateTimeField(null=True, blank=True)
     start_time = models.DateTimeField(null=True, blank=True)
+    awaiting_conclusion_time = models.DateTimeField(null=True, blank=True)
     end_time = models.DateTimeField(null=True, blank=True)
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     queue_order = models.PositiveIntegerField(null=True, blank=True)
@@ -45,13 +50,11 @@ class QueueEntry(models.Model):
     company_name = models.CharField(max_length=127, null=True, blank=True)
     truck_plate = models.CharField(max_length=127)
     truck_product = models.CharField(max_length=127)
-    truck_granel = models.CharField(max_length=127, blank=True, null=True)
-    truck_bag = models.CharField(max_length=127, blank=True, null=True)
-    truck_pallet = models.CharField(max_length=127, blank=True, null=True)
     truck_driver = models.CharField(max_length=127)
     truck_cpf = models.CharField(max_length=127)
     truck_cellphone = models.CharField(max_length=127)
     truck_type = models.CharField(max_length=127)
+    truck_cargo_type = models.CharField(max_length=127, choices=Truck.CargoType.choices)
 
     class Meta:
         ordering = [
