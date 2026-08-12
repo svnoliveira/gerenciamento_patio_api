@@ -43,6 +43,7 @@ class QueueEntrySerializer(serializers.ModelSerializer):
             "updated_at",
             "queue_order",
             "photo",
+            "document_photo",
             # truck info
             "company_name",
             "truck_plate",
@@ -57,11 +58,12 @@ class QueueEntrySerializer(serializers.ModelSerializer):
             "created_at": {"read_only": True},
             "updated_at": {"read_only": True},
             "photo": {"required": False, "allow_null": True},
+            "document_photo": {"required": False, "allow_null": True},
         }
 
     def validate_photo(self, photo):
-        if photo.size > 10 * 1024 * 1024:
-            raise serializers.ValidationError("The image cannot be larger than 10 MB.")
+        if photo.size > 15 * 1024 * 1024:
+            raise serializers.ValidationError("The image cannot be larger than 15 MB.")
 
         try:
             img = Image.open(photo)
@@ -72,6 +74,20 @@ class QueueEntrySerializer(serializers.ModelSerializer):
         photo.seek(0)
 
         return photo
+
+    def validate_document_photo(self, document_photo):
+        if document_photo.size > 15 * 1024 * 1024:
+            raise serializers.ValidationError("The image cannot be larger than 15 MB.")
+
+        try:
+            img = Image.open(document_photo)
+            img.verify()
+        except Exception:
+            raise serializers.ValidationError("Invalid image file.")
+
+        document_photo.seek(0)
+
+        return document_photo
 
     def to_representation(self, instance):
         rep = super().to_representation(instance)
@@ -99,7 +115,11 @@ class QueueEntryScheduleEditSerializer(serializers.ModelSerializer):
             "truck_cellphone",
             "truck_type",
             "truck_cargo_type",
+            "document_photo",
         ]
+        extra_kwargs = {
+            "document_photo": {"required": False, "allow_null": True},
+        }
 
     def to_representation(self, instance):
         rep = super().to_representation(instance)

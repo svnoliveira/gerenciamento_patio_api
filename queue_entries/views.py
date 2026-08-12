@@ -24,6 +24,7 @@ from .services import (
 from .serializers import QueueEntrySerializer, QueueEntryPublicSerializer
 from rest_framework.generics import GenericAPIView, ListCreateAPIView, RetrieveAPIView
 from rest_framework.exceptions import ValidationError
+from rest_framework.parsers import FormParser, MultiPartParser, JSONParser
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 from django.shortcuts import get_object_or_404
@@ -38,6 +39,7 @@ from .serializers import QueueEntryScheduleEditSerializer
 class QueueEntryScheduleUpdateView(RetrieveUpdateAPIView):
     authentication_classes = [CookieJWTAuthentication]
     permission_classes = [IsOwningCompanyOrStaff]
+    parser_classes = [JSONParser, FormParser, MultiPartParser]
     serializer_class = QueueEntryScheduleEditSerializer
     lookup_url_kwarg = "queue_entry_id"
 
@@ -117,8 +119,11 @@ class QueueEntryConfirmView(GenericAPIView):
 
         job = request.data.get("job")
         photo = request.FILES.get("photo")
+        document_photo = request.FILES.get("document_photo")
 
-        confirm_queue_entry_details(queue_entry, area=area, job=job, photo=photo)
+        confirm_queue_entry_details(
+            queue_entry, area=area, job=job, photo=photo, document_photo=document_photo
+        )
 
         serializer = self.get_serializer(queue_entry)
         return Response(serializer.data)
@@ -225,8 +230,16 @@ class QueueEntrySetStatusView(GenericAPIView):
 
         job = request.data.get("job")
         photo = request.FILES.get("photo")
+        document_photo = request.FILES.get("document_photo")
 
-        set_status(queue_entry, new_status, area=area, job=job, photo=photo)
+        set_status(
+            queue_entry,
+            new_status,
+            area=area,
+            job=job,
+            photo=photo,
+            document_photo=document_photo,
+        )
 
         serializer = self.get_serializer(queue_entry)
         return Response(serializer.data)

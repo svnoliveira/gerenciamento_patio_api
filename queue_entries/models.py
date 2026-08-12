@@ -45,6 +45,9 @@ class QueueEntry(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     queue_order = models.PositiveIntegerField(null=True, blank=True)
     photo = models.ImageField(upload_to="truck_photos/", blank=True, null=True)
+    document_photo = models.ImageField(
+        upload_to="document_photos/", blank=True, null=True
+    )
 
     # truck info
     company_name = models.CharField(max_length=127, null=True, blank=True)

@@ -105,13 +105,17 @@ def normalize_queue(area):
             entry.save(update_fields=["queue_order"])
 
 
-def confirm_queue_entry_details(queue_entry, area=None, job=None, photo=None):
+def confirm_queue_entry_details(
+    queue_entry, area=None, job=None, photo=None, document_photo=None
+):
     if area is not None:
         queue_entry.area = area
     if job is not None:
         queue_entry.job = job
     if photo is not None:
         queue_entry.photo = photo
+    if document_photo is not None:
+        queue_entry.document_photo = document_photo
 
     queue_entry.save()
 
@@ -133,6 +137,10 @@ def move_to_yard(queue_entry):
         raise ValidationError({"job": "Job must be set before confirming arrival."})
     if not queue_entry.photo:
         raise ValidationError({"photo": "A photo is required to confirm arrival."})
+    if not queue_entry.document_photo:
+        raise ValidationError(
+            {"document_photo": "A document photo is required to confirm arrival."}
+        )
 
     queue_entry.status = QueueEntry.Status.ON_YARD
     queue_entry.arrival_time = timezone.now()
@@ -210,13 +218,17 @@ def cancel_queue_entry(queue_entry):
 
 
 @transaction.atomic
-def set_status(queue_entry, new_status, area=None, job=None, photo=None):
+def set_status(
+    queue_entry, new_status, area=None, job=None, photo=None, document_photo=None
+):
     if area is not None:
         queue_entry.area = area
     if job is not None:
         queue_entry.job = job
     if photo is not None:
         queue_entry.photo = photo
+    if document_photo is not None:
+        queue_entry.document_photo = document_photo
 
     if new_status == QueueEntry.Status.CANCELLED:
         if queue_entry.queue_order is not None:
