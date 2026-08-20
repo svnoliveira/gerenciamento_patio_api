@@ -20,6 +20,7 @@ from .services import (
     new_order,
     set_order,
     finish_operation_directly,
+    change_area,
 )
 
 from .serializers import QueueEntrySerializer, QueueEntryPublicSerializer
@@ -391,6 +392,26 @@ class QueueEntryFinishDirectlyView(GenericAPIView):
     def patch(self, request, *args, **kwargs):
         queue_entry = self.get_object()
         finish_operation_directly(queue_entry)
+
+        serializer = self.get_serializer(queue_entry)
+        return Response(serializer.data)
+
+
+class QueueEntryChangeAreaView(GenericAPIView):
+    authentication_classes = [CookieJWTAuthentication]
+    permission_classes = [IsAdminUser | IsOperator]
+    queryset = QueueEntry.objects.all()
+    serializer_class = QueueEntrySerializer
+    lookup_url_kwarg = "queue_entry_id"
+
+    def patch(self, request, *args, **kwargs):
+        queue_entry = self.get_object()
+        area_id = request.data.get("area")
+        if not area_id:
+            raise ValidationError({"area": "This field is required."})
+        area = get_object_or_404(Area, pk=area_id)
+
+        change_area(queue_entry, area)
 
         serializer = self.get_serializer(queue_entry)
         return Response(serializer.data)

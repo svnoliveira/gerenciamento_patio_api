@@ -129,6 +129,22 @@ def finish_operation_directly(queue_entry):
     return queue_entry
 
 
+@transaction.atomic
+def change_area(queue_entry, new_area):
+    if queue_entry.status != QueueEntry.Status.ON_YARD:
+        raise ValidationError({"status": "Only entries on the yard can change area."})
+
+    if queue_entry.area_id == new_area.id:
+        return queue_entry
+
+    clear_order(queue_entry)
+    queue_entry.area = new_area
+    queue_entry.save(update_fields=["area"])
+    new_order(queue_entry)
+
+    return queue_entry
+
+
 # --- Regular schedule flow ---
 
 
