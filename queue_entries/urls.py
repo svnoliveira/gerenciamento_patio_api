@@ -1,6 +1,7 @@
 from django.urls import path
 
 from .views import (
+    QueueEntryFinishDirectlyView,
     QueueEntryListCreateView,
     QueueEntryDetailView,
     QueueEntryConfirmView,
@@ -63,5 +64,9 @@ urlpatterns = [
     path(
         "queue-entries/<int:queue_entry_id>/schedule/",
         QueueEntryScheduleUpdateView.as_view(),
+    ),
+    path(
+        "queue-entries/<int:queue_entry_id>/finish-directly/",
+        QueueEntryFinishDirectlyView.as_view(),
     ),
 ]

@@ -122,6 +122,13 @@ def confirm_queue_entry_details(
     return queue_entry
 
 
+@transaction.atomic
+def finish_operation_directly(queue_entry):
+    await_conclusion(queue_entry)
+    finish_queue_entry(queue_entry)
+    return queue_entry
+
+
 # --- Regular schedule flow ---
 
 
