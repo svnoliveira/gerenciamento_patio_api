@@ -23,7 +23,11 @@ from .services import (
     change_area,
 )
 
-from .serializers import QueueEntrySerializer, QueueEntryPublicSerializer
+from .serializers import (
+    QueueEntrySerializer,
+    QueueEntryPublicSerializer,
+    QueueEntryFullEditSerializer,
+)
 from rest_framework.generics import GenericAPIView, ListCreateAPIView, RetrieveAPIView
 from rest_framework.exceptions import ValidationError
 from rest_framework.parsers import FormParser, MultiPartParser, JSONParser
@@ -415,3 +419,11 @@ class QueueEntryChangeAreaView(GenericAPIView):
 
         serializer = self.get_serializer(queue_entry)
         return Response(serializer.data)
+
+
+class QueueEntryFullEditView(RetrieveUpdateAPIView):
+    authentication_classes = [CookieJWTAuthentication]
+    permission_classes = [IsAdminUser | IsOperator]
+    queryset = QueueEntry.objects.all()
+    serializer_class = QueueEntryFullEditSerializer
+    lookup_url_kwarg = "queue_entry_id"

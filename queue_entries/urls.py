@@ -3,6 +3,7 @@ from django.urls import path
 from .views import (
     QueueEntryChangeAreaView,
     QueueEntryFinishDirectlyView,
+    QueueEntryFullEditView,
     QueueEntryListCreateView,
     QueueEntryDetailView,
     QueueEntryConfirmView,
@@ -73,5 +74,9 @@ urlpatterns = [
     path(
         "queue-entries/<int:queue_entry_id>/change-area/",
         QueueEntryChangeAreaView.as_view(),
+    ),
+    path(
+        "queue-entries/<int:queue_entry_id>/edit/",
+        QueueEntryFullEditView.as_view(),
     ),
 ]

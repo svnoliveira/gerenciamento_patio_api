@@ -125,3 +125,47 @@ class QueueEntryScheduleEditSerializer(serializers.ModelSerializer):
         rep = super().to_representation(instance)
         rep["area"] = AreaSerializer(instance.area).data if instance.area else None
         return rep
+
+
+class QueueEntryFullEditSerializer(serializers.ModelSerializer):
+    area = serializers.PrimaryKeyRelatedField(
+        queryset=Area.objects.all(),
+        allow_null=True,
+        required=False,
+    )
+    document_photo = serializers.ImageField(allow_null=True, required=False)
+
+    class Meta:
+        model = QueueEntry
+        fields = [
+            "id",
+            "area",
+            "job",
+            "company_name",
+            "truck_plate",
+            "truck_product",
+            "truck_driver",
+            "truck_cpf",
+            "truck_cellphone",
+            "truck_type",
+            "truck_cargo_type",
+            "document_photo",
+        ]
+
+    def validate_document_photo(self, photo):
+        if photo is None:
+            return photo
+        if photo.size > 20 * 1024 * 1024:
+            raise serializers.ValidationError("The image cannot be larger than 20 MB.")
+        try:
+            img = Image.open(photo)
+            img.verify()
+        except Exception:
+            raise serializers.ValidationError("Invalid image file.")
+        photo.seek(0)
+        return photo
+
+    def to_representation(self, instance):
+        rep = super().to_representation(instance)
+        rep["area"] = AreaSerializer(instance.area).data if instance.area else None
+        return rep
