@@ -160,10 +160,10 @@ def move_to_yard(queue_entry):
         raise ValidationError({"job": "Job must be set before confirming arrival."})
     if not queue_entry.photo:
         raise ValidationError({"photo": "A photo is required to confirm arrival."})
-    if not queue_entry.document_photo:
-        raise ValidationError(
-            {"document_photo": "A document photo is required to confirm arrival."}
-        )
+    # if not queue_entry.document_photo:
+    #     raise ValidationError(
+    #         {"document_photo": "A document photo is required to confirm arrival."}
+    #     )
 
     queue_entry.status = QueueEntry.Status.ON_YARD
     queue_entry.arrival_time = timezone.now()
