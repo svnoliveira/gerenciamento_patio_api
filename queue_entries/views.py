@@ -1,5 +1,5 @@
 from _core.authentications import CookieJWTAuthentication
-from _core.permissions import IsOperator
+from _core.permissions import IsAuthenticatedNotViewer, IsOperator
 from areas.models import Area
 from queue_entries.filters import QueueEntryFilter
 from queue_entries.models import QueueEntry
@@ -32,7 +32,7 @@ from rest_framework.generics import GenericAPIView, ListCreateAPIView, RetrieveA
 from rest_framework.exceptions import ValidationError
 from rest_framework.parsers import FormParser, MultiPartParser, JSONParser
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
+from rest_framework.permissions import AllowAny, IsAdminUser
 from django.shortcuts import get_object_or_404
 from users.models import User
 
@@ -70,7 +70,7 @@ class QueueEntryListCreateView(ListCreateAPIView):
 
     def get_permissions(self):
         if self.request.method == "POST":
-            return [IsAuthenticated()]
+            return [IsAuthenticatedNotViewer()]
         return [AllowAny()]
 
     def get_queryset(self):
@@ -97,7 +97,8 @@ class QueueEntryListCreateView(ListCreateAPIView):
         if is_live_queue_request and not (
             user.is_authenticated
             and (
-                user.is_superuser or user.role in (User.Role.ADMIN, User.Role.OPERATOR)
+                user.is_superuser
+                or user.role in (User.Role.ADMIN, User.Role.OPERATOR, User.Role.VIEWER)
             )
         ):
             return QueueEntryPublicSerializer
@@ -373,7 +374,11 @@ class QueueEntryDetailView(RetrieveAPIView):
         obj = self.get_object()
 
         if user and user.is_authenticated:
-            if user.is_superuser or user.role in (User.Role.ADMIN, User.Role.OPERATOR):
+            if user.is_superuser or user.role in (
+                User.Role.ADMIN,
+                User.Role.OPERATOR,
+                User.Role.VIEWER,
+            ):
                 return QueueEntrySerializer
 
             if (

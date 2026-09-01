@@ -7,6 +7,7 @@ class User(AbstractUser):
         ADMIN = "ADMIN", "Admin"
         COMPANY = "COMPANY", "Company"
         OPERATOR = "OPERATOR", "Operator"
+        VIEWER = "VIEWER", "Viewer"
 
     email = models.EmailField(max_length=127, unique=True)
     name = models.CharField(max_length=127)

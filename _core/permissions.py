@@ -64,3 +64,14 @@ class IsOwningCompanyOrStaff(permissions.BasePermission):
             return bool(user.company and obj.company_name == user.company.name)
 
         return False
+
+
+class IsViewer(permissions.BasePermission):
+    def has_permission(self, request, view):
+        return request.user.is_authenticated and request.user.role == User.Role.VIEWER
+
+
+class IsAuthenticatedNotViewer(permissions.BasePermission):
+
+    def has_permission(self, request, view):
+        return request.user.is_authenticated and request.user.role != User.Role.VIEWER

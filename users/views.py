@@ -115,6 +115,7 @@ class CookieTokenObtainPairView(TokenObtainPairView):
                 httponly=True,
                 secure=not settings.DEBUG,
                 samesite="Lax",
+                domain=settings.COOKIE_DOMAIN,
                 path="/",
                 max_age=60 * 60 * 24 * 7,
             )
