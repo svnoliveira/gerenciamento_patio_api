@@ -208,3 +208,6 @@ DEFAULT_FROM_EMAIL = "noreply@example.com"
 CORS_ALLOWED_ORIGINS = ["http://localhost:3000", "https://app.lrnagricola.com.br"]
 
 CORS_ALLOW_CREDENTIALS = True
+
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", default="")
+TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", default="")

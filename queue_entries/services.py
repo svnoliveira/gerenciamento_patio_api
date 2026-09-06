@@ -1,6 +1,8 @@
 from django.utils import timezone
 from django.db import transaction
 from rest_framework.exceptions import ValidationError
+from _core import settings
+from _core.notifications import send_telegram_notification
 from queue_entries.models import QueueEntry
 from django.db.models import Max, F
 
@@ -171,6 +173,13 @@ def move_to_yard(queue_entry):
 
     new_order(queue_entry)
 
+    detail_url = f"{settings.FRONTEND_URL}/queue-entries/{queue_entry.id}"
+    send_telegram_notification(
+        f"🚚 <b>{queue_entry.truck_plate}</b> chegou ao pátio — "
+        f"{queue_entry.area.name}\n"
+        f'<a href="{detail_url}">Ver detalhes</a>'
+    )
+
     return queue_entry
 
 
@@ -197,6 +206,13 @@ def start_operation(queue_entry):
     queue_entry.save()
 
     clear_order(queue_entry)
+
+    detail_url = f"{settings.FRONTEND_URL}/queue-entries/{queue_entry.id}"
+    send_telegram_notification(
+        f"⚙️ <b>{queue_entry.truck_plate}</b> iniciou operação — "
+        f"{queue_entry.area.name}\n"
+        f'<a href="{detail_url}">Ver detalhes</a>'
+    )
 
     return queue_entry
 
