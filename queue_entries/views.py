@@ -77,7 +77,10 @@ class QueueEntryListCreateView(ListCreateAPIView):
         user = self.request.user
         queryset = QueueEntry.objects.all()
 
-        is_live_queue_request = bool(self.request.query_params.get("status_in"))
+        is_live_queue_request = bool(
+            self.request.query_params.get("status_in")
+            or self.request.query_params.get("status")
+        )
 
         if (
             user.is_authenticated
@@ -127,9 +130,15 @@ class QueueEntryConfirmView(GenericAPIView):
         job = request.data.get("job")
         photo = request.FILES.get("photo")
         document_photo = request.FILES.get("document_photo")
+        document_file = request.FILES.get("document_file")
 
         confirm_queue_entry_details(
-            queue_entry, area=area, job=job, photo=photo, document_photo=document_photo
+            queue_entry,
+            area=area,
+            job=job,
+            photo=photo,
+            document_photo=document_photo,
+            document_file=document_file,
         )
 
         serializer = self.get_serializer(queue_entry)
@@ -238,6 +247,7 @@ class QueueEntrySetStatusView(GenericAPIView):
         job = request.data.get("job")
         photo = request.FILES.get("photo")
         document_photo = request.FILES.get("document_photo")
+        document_file = request.FILES.get("document_file")
 
         set_status(
             queue_entry,
@@ -246,6 +256,7 @@ class QueueEntrySetStatusView(GenericAPIView):
             job=job,
             photo=photo,
             document_photo=document_photo,
+            document_file=document_file,
         )
 
         serializer = self.get_serializer(queue_entry)

@@ -48,6 +48,7 @@ class QueueEntry(models.Model):
     document_photo = models.ImageField(
         upload_to="document_photos/", blank=True, null=True
     )
+    document_file = models.FileField(upload_to="document_files/", blank=True, null=True)
 
     # truck info
     company_name = models.CharField(max_length=127, null=True, blank=True)

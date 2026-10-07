@@ -108,7 +108,12 @@ def normalize_queue(area):
 
 
 def confirm_queue_entry_details(
-    queue_entry, area=None, job=None, photo=None, document_photo=None
+    queue_entry,
+    area=None,
+    job=None,
+    photo=None,
+    document_photo=None,
+    document_file=None,
 ):
     if area is not None:
         queue_entry.area = area
@@ -118,6 +123,8 @@ def confirm_queue_entry_details(
         queue_entry.photo = photo
     if document_photo is not None:
         queue_entry.document_photo = document_photo
+    if document_file is not None:
+        queue_entry.document_file = document_file
 
     queue_entry.save()
 

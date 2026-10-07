@@ -6,6 +6,8 @@ from rest_framework import serializers
 from areas.serializers import AreaSerializer
 from .models import QueueEntry
 
+ALLOWED_DOCUMENT_EXTENSIONS = [".pdf", ".docx", ".doc", ".txt"]
+
 
 class QueueEntryPublicSerializer(serializers.ModelSerializer):
     area = AreaSerializer(read_only=True)
@@ -44,6 +46,7 @@ class QueueEntrySerializer(serializers.ModelSerializer):
             "queue_order",
             "photo",
             "document_photo",
+            "document_file",
             # truck info
             "company_name",
             "truck_plate",
@@ -59,6 +62,7 @@ class QueueEntrySerializer(serializers.ModelSerializer):
             "updated_at": {"read_only": True},
             "photo": {"required": False, "allow_null": True},
             "document_photo": {"required": False, "allow_null": True},
+            "document_file": {"required": False, "allow_null": True},
         }
 
     def validate_photo(self, photo):
@@ -89,6 +93,18 @@ class QueueEntrySerializer(serializers.ModelSerializer):
 
         return document_photo
 
+    def validate_document_file(self, file):
+        if file is None:
+            return file
+        if file.size > 20 * 1024 * 1024:
+            raise serializers.ValidationError("O arquivo não pode ser maior que 20 MB.")
+        ext = file.name.lower().rsplit(".", 1)[-1]
+        if f".{ext}" not in ALLOWED_DOCUMENT_EXTENSIONS:
+            raise serializers.ValidationError(
+                "Tipo de arquivo não permitido. Use PDF, DOCX, DOC ou TXT."
+            )
+        return file
+
     def to_representation(self, instance):
         rep = super().to_representation(instance)
         rep["area"] = AreaSerializer(instance.area).data if instance.area else None
@@ -116,9 +132,11 @@ class QueueEntryScheduleEditSerializer(serializers.ModelSerializer):
             "truck_type",
             "truck_cargo_type",
             "document_photo",
+            "document_file",
         ]
         extra_kwargs = {
             "document_photo": {"required": False, "allow_null": True},
+            "document_file": {"required": False, "allow_null": True},
         }
 
     def to_representation(self, instance):
@@ -150,6 +168,7 @@ class QueueEntryFullEditSerializer(serializers.ModelSerializer):
             "truck_type",
             "truck_cargo_type",
             "document_photo",
+            "document_file",
         ]
 
     def validate_document_photo(self, photo):
@@ -164,6 +183,18 @@ class QueueEntryFullEditSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Invalid image file.")
         photo.seek(0)
         return photo
+
+    def validate_document_file(self, file):
+        if file is None:
+            return file
+        if file.size > 20 * 1024 * 1024:
+            raise serializers.ValidationError("O arquivo não pode ser maior que 20 MB.")
+        ext = file.name.lower().rsplit(".", 1)[-1]
+        if f".{ext}" not in ALLOWED_DOCUMENT_EXTENSIONS:
+            raise serializers.ValidationError(
+                "Tipo de arquivo não permitido. Use PDF, DOCX, DOC ou TXT."
+            )
+        return file
 
     def to_representation(self, instance):
         rep = super().to_representation(instance)
