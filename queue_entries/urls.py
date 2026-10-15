@@ -1,7 +1,9 @@
 from django.urls import path
 
 from .views import (
+    QueueEntryAwaitingNFListView,
     QueueEntryChangeAreaView,
+    QueueEntryExportView,
     QueueEntryFinishDirectlyView,
     QueueEntryFullEditView,
     QueueEntryListCreateView,
@@ -79,4 +81,6 @@ urlpatterns = [
         "queue-entries/<int:queue_entry_id>/edit/",
         QueueEntryFullEditView.as_view(),
     ),
+    path("queue-entries/awaiting-nf/", QueueEntryAwaitingNFListView.as_view()),
+    path("queue-entries/export/", QueueEntryExportView.as_view()),
 ]

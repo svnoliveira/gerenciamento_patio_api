@@ -24,15 +24,21 @@ from .services import (
 )
 
 from .serializers import (
+    QueueEntryAwaitingNFSerializer,
     QueueEntrySerializer,
     QueueEntryPublicSerializer,
     QueueEntryFullEditSerializer,
 )
-from rest_framework.generics import GenericAPIView, ListCreateAPIView, RetrieveAPIView
+from rest_framework.generics import (
+    GenericAPIView,
+    ListCreateAPIView,
+    RetrieveAPIView,
+    ListAPIView,
+)
 from rest_framework.exceptions import ValidationError
 from rest_framework.parsers import FormParser, MultiPartParser, JSONParser
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny, IsAdminUser
+from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from django.shortcuts import get_object_or_404
 from users.models import User
 
@@ -40,6 +46,11 @@ from users.models import User
 from rest_framework.generics import RetrieveUpdateAPIView
 from _core.permissions import IsOwningCompanyOrStaff
 from .serializers import QueueEntryScheduleEditSerializer
+
+from django.http import HttpResponse
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.filters import OrderingFilter, SearchFilter
+from .exports import build_queue_entries_workbook
 
 
 class QueueEntryScheduleUpdateView(RetrieveUpdateAPIView):
@@ -443,3 +454,56 @@ class QueueEntryFullEditView(RetrieveUpdateAPIView):
     queryset = QueueEntry.objects.all()
     serializer_class = QueueEntryFullEditSerializer
     lookup_url_kwarg = "queue_entry_id"
+
+
+class QueueEntryAwaitingNFListView(ListAPIView):
+    authentication_classes = []
+    permission_classes = [AllowAny]
+    filter_backends = []
+    pagination_class = None
+    serializer_class = QueueEntryAwaitingNFSerializer
+
+    def get_queryset(self):
+        return QueueEntry.objects.filter(
+            status=QueueEntry.Status.AWAITING_CONCLUSION,
+        ).order_by("awaiting_conclusion_time")
+
+
+class QueueEntryExportView(GenericAPIView):
+    authentication_classes = [CookieJWTAuthentication]
+    permission_classes = [IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_class = QueueEntryFilter
+    ordering_fields = ["created_at", "start_time", "end_time", "queue_order"]
+    search_fields = ["truck_plate", "truck_driver", "truck_cpf", "company_name"]
+
+    def get_queryset(self):
+        user = self.request.user
+        queryset = QueueEntry.objects.select_related("area")
+
+        if user.is_superuser or user.role in (
+            User.Role.ADMIN,
+            User.Role.OPERATOR,
+            User.Role.VIEWER,
+        ):
+            return queryset
+
+        if user.role == User.Role.COMPANY and user.company:
+            return queryset.filter(company_name=user.company.name)
+
+        return queryset.none()
+
+    def get(self, request, *args, **kwargs):
+        entries = self.filter_queryset(self.get_queryset())
+        content = build_queue_entries_workbook(entries)
+
+        response = HttpResponse(
+            content,
+            content_type=(
+                "application/vnd.openxmlformats-officedocument" ".spreadsheetml.sheet"
+            ),
+        )
+        response["Content-Disposition"] = (
+            'attachment; filename="historico-agendamentos.xlsx"'
+        )
+        return response

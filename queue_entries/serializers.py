@@ -200,3 +200,9 @@ class QueueEntryFullEditSerializer(serializers.ModelSerializer):
         rep = super().to_representation(instance)
         rep["area"] = AreaSerializer(instance.area).data if instance.area else None
         return rep
+
+
+class QueueEntryAwaitingNFSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = QueueEntry
+        fields = ["id", "truck_plate", "truck_driver", "awaiting_conclusion_time"]
