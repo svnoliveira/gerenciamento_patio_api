@@ -4,6 +4,7 @@ from areas.models import Area
 from rest_framework import serializers
 
 from areas.serializers import AreaSerializer
+from queue_entries.validators import validate_document_upload
 from .models import QueueEntry
 
 ALLOWED_DOCUMENT_EXTENSIONS = [".pdf", ".docx", ".doc", ".txt"]
@@ -47,6 +48,7 @@ class QueueEntrySerializer(serializers.ModelSerializer):
             "photo",
             "document_photo",
             "document_file",
+            "final_nf",
             # truck info
             "company_name",
             "truck_plate",
@@ -63,6 +65,7 @@ class QueueEntrySerializer(serializers.ModelSerializer):
             "photo": {"required": False, "allow_null": True},
             "document_photo": {"required": False, "allow_null": True},
             "document_file": {"required": False, "allow_null": True},
+            "final_nf": {"read_only": True},
         }
 
     def validate_photo(self, photo):
@@ -152,6 +155,9 @@ class QueueEntryFullEditSerializer(serializers.ModelSerializer):
         required=False,
     )
     document_photo = serializers.ImageField(allow_null=True, required=False)
+    final_nf = serializers.FileField(
+        allow_null=True, required=False, validators=[validate_document_upload]
+    )
 
     class Meta:
         model = QueueEntry
@@ -169,7 +175,10 @@ class QueueEntryFullEditSerializer(serializers.ModelSerializer):
             "truck_cargo_type",
             "document_photo",
             "document_file",
+            "final_nf",
+            "status",
         ]
+        read_only_fields = ["status"]
 
     def validate_document_photo(self, photo):
         if photo is None:
@@ -185,16 +194,16 @@ class QueueEntryFullEditSerializer(serializers.ModelSerializer):
         return photo
 
     def validate_document_file(self, file):
-        if file is None:
-            return file
-        if file.size > 20 * 1024 * 1024:
-            raise serializers.ValidationError("O arquivo não pode ser maior que 20 MB.")
-        ext = file.name.lower().rsplit(".", 1)[-1]
-        if f".{ext}" not in ALLOWED_DOCUMENT_EXTENSIONS:
-            raise serializers.ValidationError(
-                "Tipo de arquivo não permitido. Use PDF, DOCX, DOC ou TXT."
-            )
-        return file
+        validate_document_upload(file)
+
+    # def validate(self, attrs):
+
+    #     if self.instance and self.instance.status == QueueEntry.Status.FINISHED:
+    #         if set(attrs) - {"final_nf"}:
+    #             raise serializers.ValidationError(
+    #                 "Registros finalizados só permitem alterar o arquivo da NF final."
+    #             )
+    #     return attrs
 
     def to_representation(self, instance):
         rep = super().to_representation(instance)
@@ -203,6 +212,18 @@ class QueueEntryFullEditSerializer(serializers.ModelSerializer):
 
 
 class QueueEntryAwaitingNFSerializer(serializers.ModelSerializer):
+    area_name = serializers.SerializerMethodField()
+
     class Meta:
         model = QueueEntry
-        fields = ["id", "truck_plate", "truck_driver", "awaiting_conclusion_time"]
+        fields = [
+            "id",
+            "truck_plate",
+            "truck_driver",
+            "company_name",
+            "area_name",
+            "awaiting_conclusion_time",
+        ]
+
+    def get_area_name(self, obj):
+        return obj.area.name if obj.area else None

@@ -1,6 +1,14 @@
+import os
+import uuid
+
+
 from django.db import models
 from _core import settings
 from trucks.models import Truck
+
+
+def final_nf_upload_to(instance, filename):
+    return f"final_nfs/{uuid.uuid4().hex}/{os.path.basename(filename)}"
 
 
 class QueueEntry(models.Model):
@@ -49,6 +57,9 @@ class QueueEntry(models.Model):
         upload_to="document_photos/", blank=True, null=True
     )
     document_file = models.FileField(upload_to="document_files/", blank=True, null=True)
+    final_nf = models.FileField(
+        upload_to=final_nf_upload_to, max_length=255, blank=True, null=True
+    )
 
     # truck info
     company_name = models.CharField(max_length=127, null=True, blank=True)

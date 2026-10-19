@@ -464,9 +464,11 @@ class QueueEntryAwaitingNFListView(ListAPIView):
     serializer_class = QueueEntryAwaitingNFSerializer
 
     def get_queryset(self):
-        return QueueEntry.objects.filter(
-            status=QueueEntry.Status.AWAITING_CONCLUSION,
-        ).order_by("awaiting_conclusion_time")
+        return (
+            QueueEntry.objects.filter(status=QueueEntry.Status.AWAITING_CONCLUSION)
+            .select_related("area")
+            .order_by("awaiting_conclusion_time")
+        )
 
 
 class QueueEntryExportView(GenericAPIView):
